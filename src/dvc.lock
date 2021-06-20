@@ -1,0 +1,62 @@
+schema: '2.0'
+stages:
+  load_data:
+    cmd: python3 load_data.py --config=../params.yaml
+    deps:
+    - path: ../data_raw/bigmart.csv
+      md5: e0df0a56f3f03c084c828b29aaa0f314
+      size: 869537
+    - path: get_data.py
+      md5: c4c9e44df3603144fbbd0ead1e86f983
+      size: 764
+    - path: load_data.py
+      md5: 1fd9c58883a5730343d015654efb80d4
+      size: 3321
+    outs:
+    - path: ../data/raw/bigmart.csv
+      md5: 67aa1714c0ae6561fb2f0467dcc212dc
+      size: 905991
+  split_data:
+    cmd: python3 split_data.py --config=../params.yaml
+    deps:
+    - path: ../data/raw/bigmart.csv
+      md5: 67aa1714c0ae6561fb2f0467dcc212dc
+      size: 905991
+    - path: split_data.py
+      md5: 5d53d3603dacc44563115b47c9c2bf51
+      size: 1214
+    outs:
+    - path: ../data/processed/test_bigmart.csv
+      md5: 91600aad9af05f85582e4bce06131f5a
+      size: 180924
+    - path: ../data/processed/train_bigmart.csv
+      md5: 6f79478a1c6d40e305320c7724968bf2
+      size: 725253
+  train_evaluate:
+    cmd: python3 train_evaluate.py --config=../params.yaml
+    deps:
+    - path: ../data/processed/test_bigmart.csv
+      md5: 91600aad9af05f85582e4bce06131f5a
+      size: 180924
+    - path: ../data/processed/train_bigmart.csv
+      md5: 6f79478a1c6d40e305320c7724968bf2
+      size: 725253
+    - path: train_evaluate.py
+      md5: 89e74e9a9e2b6087ddc695e476e980af
+      size: 6604
+    outs:
+    - path: ../report/params.json
+      md5: 218cd2ed7190d7432436a2bc3985fb10
+      size: 30
+    - path: ../report/scores.json
+      md5: 40ac5d59df8f52d523c90d70450fb359
+      size: 94
+    - path: ../saved_models/label_encode.pkl
+      md5: 9ef5598ae9e150ac0bd96f6bf0e70886
+      size: 1039
+    - path: ../saved_models/rf_model.pkl
+      md5: 4876bdab242e08be450f6025a7e5611d
+      size: 657
+    - path: ../saved_models/standard_scaler.pkl
+      md5: 65a5ef8eee751b359ed51910c55ad1ab
+      size: 546

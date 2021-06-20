@@ -1,0 +1,36 @@
+{
+    "Item_Identifier": {
+        "0": "FDA15"
+    },
+    "Item_Weight": {
+        "0": 9.3
+    },
+    "Item_Fat_Content": {
+        "0": "Low Fat"
+    },
+    "Item_Visibility": {
+        "0": 0.016047301
+    },
+    "Item_Type": {
+        "0": "Dairy"
+    },
+    "Item_MRP": {
+        "0": 249.8092
+    },
+    "Outlet_Identifier": {
+        "0": "OUT049"
+    },
+    "Outlet_Establishment_Year": {
+        "0": 1999
+    },
+    "Outlet_Size": {
+        "0": "Medium"
+    },
+
+    "Outlet_Type": {
+        "0": "Supermarket Type1"
+    },
+    "Outlet_Location_Type": {
+        "0": "Tier 1"
+    }
+}
