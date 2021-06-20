@@ -32,6 +32,7 @@ def read_params(config_path=params_path):
 
 
 def predict(data):
+    # prediction service
     config = read_params(params_path)
     model_path = config["predict_model_dir"]
 
