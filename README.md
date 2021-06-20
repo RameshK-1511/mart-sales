@@ -7,4 +7,4 @@ Using this model, BigMart will try to understand the properties of products and 
 
 Evaluation Metric: Root Mean Square Error
 
-App Link: https://big-mart-sales.herokuapp.com/
+App Link: https://big-mart-sale.herokuapp.com/
