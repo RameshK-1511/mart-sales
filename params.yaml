@@ -17,15 +17,15 @@ split_data:
 estimators:
   RandomForest:
     params:
-      n_estimators: [100,250,450,700,900]
+      # n_estimators: [100,250,450,700,900]
       # Number of features to consider at every split
       max_features: ['auto', 'sqrt']
       # Maximum number of levels in tree
-      max_depth: [5, 10, 15, 20, 25, 30]
+      # max_depth: [5, 10, 15, 20, 25, 30]
       # Minimum number of samples required to split a node
-      min_samples_split: [2, 5, 10, 15, 100]
+      # min_samples_split: [2, 5, 10, 15, 100]
       # Minimum number of samples required at each leaf node
-      min_samples_leaf: [1, 2, 5, 10]
+      min_samples_leaf: [1, 2, 5, 10] 
 
 model_dir: ../saved_models
 
@@ -34,3 +34,10 @@ reports:
   scores: ../report/scores.json
 
 predict_model_dir: predict_service/model
+
+mlflow_config:
+  artifacts_dir: ../artifacts
+  experiment_name: Random Forest Regression
+  run_name: mlops
+  registered_model_name: RandomForestModel
+  remote_server_url: http://0.0.0.0:5000
