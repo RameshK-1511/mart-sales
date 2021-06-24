@@ -1,10 +1,12 @@
 import os
 import json
 import pickle
+import mlflow
 import argparse
 import numpy as np
 import pandas as pd
 from sklearn import metrics
+from urllib.parse import urlparse
 from scipy.sparse import hstack
 from get_data import read_params
 from sklearn.preprocessing import OneHotEncoder
@@ -23,6 +25,15 @@ class TrainEvaluate():
         target = config["base"]["target_col"]
         model_dir = config["model_dir"]
 
+# --------------------------MLFLOW-----------------------------------------------------------------
+        mlflow_config = config['mlflow_config']
+        remote_server_url = mlflow_config['remote_server_url']
+        experiment_name = mlflow_config['experiment_name']
+
+        mlflow.set_tracking_uri(remote_server_url)
+        mlflow.set_experiment(experiment_name)
+# --------------------------MLFLOW-----------------------------------------------------------------
+
         train = pd.read_csv(train_data_path)
         test = pd.read_csv(test_data_path)
 
@@ -38,9 +49,10 @@ class TrainEvaluate():
         print('categorical_cols', categorical_cols)
         print('numerical_cols', numerical_cols)
 
-        std_train_data, std_test_data = self.standardize(X_train, X_test, numerical_cols, model_dir)
-        vect_train_data, vect_test_data = self.one_hot_encoder(X_train, X_test, categorical_cols, model_dir)
-        self.build_model(std_train_data, std_test_data, vect_train_data, vect_test_data, y_train, y_test, config)
+        with mlflow.start_run(run_name=mlflow_config['run_name']) as mlops_run:
+            std_train_data, std_test_data = self.standardize(X_train, X_test, numerical_cols, model_dir)
+            vect_train_data, vect_test_data = self.one_hot_encoder(X_train, X_test, categorical_cols, model_dir)
+            self.build_model(std_train_data, std_test_data, vect_train_data, vect_test_data, y_train, y_test, config)
 
     def standardize(self, train_data, test_data, standardize_columns, model_dir):
         # standardizing numerical features such that they have mean = 0, sd = 1
@@ -104,23 +116,19 @@ class TrainEvaluate():
         scores_file = config["reports"]["scores"]
         params_file = config["reports"]["params"]
 
-        print(n_estimators)
-
-        # Create the random grid 'n_estimators': n_estimators,
+        # Create the random grid
         random_grid = { 'n_estimators': n_estimators,
             'max_features': max_features,
             'max_depth': max_depth,
             'min_samples_split': min_samples_split,
             'min_samples_leaf': min_samples_leaf}
 
-        # print(random_grid)
-
         rf = RandomForestRegressor()
 
         # Random search of parameters, using 5 fold cross validation,
         # search across 50 different combinations
         rf_random = RandomizedSearchCV(estimator=rf, param_distributions=random_grid,
-                                       scoring='neg_mean_squared_error', cv=5, verbose=12, random_state=42, n_jobs=-1)
+                                       scoring='neg_mean_squared_error', cv=2, verbose=12, random_state=42, n_jobs=-1)
 
         rf_random.fit(x_train, y_train.values.ravel())
 
@@ -133,15 +141,27 @@ class TrainEvaluate():
 
         rmse, mae, r2 = self.eval_metrics(y_test, y_predicted)
 
-        eval_metric = {'rmse':rmse, 'mae':mae, 'r2':r2}
+        mlflow.log_param("best parameters", best_param)
+        mlflow.log_metric('rmse', rmse)
+        mlflow.log_metric('mae', mae)
+        mlflow.log_metric('r2', r2)
 
-        self.report(eval_metric, scores_file, params_file, best_param)
+        tracking_url_type_store = urlparse(mlflow.get_artifact_uri()).scheme
 
-        os.makedirs(model_dir, exist_ok=True)
-        pkl_path = os.path.join(model_dir, "rf_model.pkl")
+        if tracking_url_type_store != 'file':
+            mlflow.sklearn.log_model(rf_random, 'model', registered_model_name=config['mlflow_config']['registered_model_name'])
+        else:
+            mlflow.sklearn.load_model(rf_random, 'model')
 
-        with open(pkl_path, 'wb') as f:
-            pickle.dump(rf_random, f)
+        # eval_metric = {'rmse':rmse, 'mae':mae, 'r2':r2}
+
+        # self.report(eval_metric, scores_file, params_file, best_param)
+
+        # os.makedirs(model_dir, exist_ok=True)
+        # pkl_path = os.path.join(model_dir, "rf_model.pkl")
+
+        # with open(pkl_path, 'wb') as f:
+        #     pickle.dump(rf_random, f)
 
     def eval_metrics(self, actual, pred):
         rmse = np.sqrt(metrics.mean_squared_error(actual, pred))

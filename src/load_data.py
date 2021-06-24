@@ -1,5 +1,5 @@
 import os
-from src.get_data import read_params, get_data
+from get_data import read_params, get_data
 import argparse
 import numpy as np
 from datetime import date
